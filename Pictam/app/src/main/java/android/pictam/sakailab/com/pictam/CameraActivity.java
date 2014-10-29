@@ -1,14 +1,19 @@
 package android.pictam.sakailab.com.pictam;
 
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Handler;
 import android.pictam.sakailab.com.pictam.config.Config;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 
 /**
@@ -23,6 +28,10 @@ public class CameraActivity extends FragmentActivity implements
 
     private ImageAnimationFragment mAnimFragment;
     private CameraBridgeViewBase mCameraView;
+
+    private ImageView mDummyImage;
+    private boolean mIsViewDummyImage = false;
+    private Handler mHandler = new Handler();
 
     private RetrieveMatchPointWorker mTakePreviewWorker;
 
@@ -58,6 +67,19 @@ public class CameraActivity extends FragmentActivity implements
         }
         mTakePreviewWorker.registerTakePreviewTask(imageMat);
         mCount = 0;
+
+        if (!mIsViewDummyImage) {
+            final Bitmap dst = Bitmap.createBitmap(imageMat.width(), imageMat.height(), Bitmap.Config.ARGB_8888);
+            Utils.matToBitmap(imageMat, dst);
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    mDummyImage.setImageBitmap(dst);
+                }
+            });
+            mIsViewDummyImage = true;
+        }
+
         return imageMat;
     }
 
@@ -87,6 +109,7 @@ public class CameraActivity extends FragmentActivity implements
     }
 
     private void initViews() {
+        mDummyImage = (ImageView) findViewById(R.id.dummy_image_container);
         mCameraView = (CameraBridgeViewBase) findViewById(R.id.camera_view);
         mCameraView.setCvCameraViewListener(this);
 //        mCameraView.setMaxFrameSize();
